@@ -79,7 +79,8 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.ilk
-*.meta
+# *.meta — DISABLED: Unity .meta files must be tracked
+# *.meta
 *.obj
 *.iobj
 *.pch
@@ -240,7 +241,8 @@ _pkginfo.txt
 # Others
 ClientBin/
 ~$*
-*~
+# *~ — DISABLED: Unity Samples~ directory must be tracked
+# *~
 *.dbmdl
 *.dbproj.schemaview
 *.jfm
@@ -483,7 +485,41 @@ $RECYCLE.BIN/
 
 # CMake
 build/
+build-*/
 cmake-build-*/
 
 # Generated C files
 src/BreadLua.Native/src/generated/
+
+# NuGet local packages output
+packages/
+
+# ============================
+# Unity
+# ============================
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Memory Profiler
+[Mm]emoryCaptures/
+
+# Asset meta data (tracked for Unity package, but ignore for test projects)
+# Note: src/BreadLua.Unity/**/*.meta is tracked (see rule above)
+
+# Unity3D generated file on crash reports
+sysinfo.txt
+
+# Crashlytics
+crashlytics-build.properties
+
+# Addressables
+[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# TextMeshPro
+[Aa]ssets/TextMesh*Pro/
