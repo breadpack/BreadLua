@@ -6,4 +6,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/BreadLua.Tests/BreadLua.Tests.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/BreadLua.Sample/BreadLua.Sample.csproj" />
+  </Folder>
 </Solution>

@@ -39,7 +39,7 @@ public unsafe class Buffer<T> : IDisposable where T : unmanaged
     public void BindToLua(LuaState state, string globalName)
     {
         state.SetGlobal(globalName, (IntPtr)_ptr);
-        state.SetGlobal(globalName + "_count", _count);
+        state.SetGlobal(globalName + "_count", (long)_count);
     }
 
     public void Dispose()
