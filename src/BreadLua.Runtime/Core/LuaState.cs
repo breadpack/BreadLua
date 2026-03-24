@@ -97,10 +97,19 @@ public class LuaState : IDisposable
         LuaNative.breadlua_set_metatable_fn(_L, metatableName, funcName, cFunction);
     }
 
+    private HotReload? _hotReload;
+
+    public void Reload(string path) => (_hotReload ??= new HotReload(this)).Reload(path);
+    public void WatchAndReload(string directory, string filter = "*.lua") => (_hotReload ??= new HotReload(this)).WatchAndReload(directory, filter);
+    public void StopWatching() => _hotReload?.StopWatching();
+
+    public void StartRepl() => new Repl(this).Start();
+
     public void Dispose()
     {
         if (!_disposed)
         {
+            _hotReload?.Dispose();
             if (_L != IntPtr.Zero)
             {
                 LuaNative.breadlua_close(_L);

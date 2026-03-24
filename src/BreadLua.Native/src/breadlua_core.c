@@ -84,6 +84,26 @@ BREADLUA_EXPORT int breadlua_gettop(lua_State* L) {
     return lua_gettop(L);
 }
 
+/* Generic callback for LuaTinker Bind() */
+typedef int (*bread_generic_callback)(lua_State* L, const char* func_name);
+static bread_generic_callback g_generic_callback = NULL;
+
+BREADLUA_EXPORT void breadlua_set_generic_callback(void* fn) {
+    g_generic_callback = (bread_generic_callback)fn;
+}
+
+static int bread_generic_dispatch(lua_State* L) {
+    if (!g_generic_callback) return 0;
+    const char* name = lua_tostring(L, lua_upvalueindex(1));
+    return g_generic_callback(L, name);
+}
+
+BREADLUA_EXPORT void breadlua_register_callback(lua_State* L, const char* name) {
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, bread_generic_dispatch, 1);
+    lua_setglobal(L, name);
+}
+
 BREADLUA_EXPORT void breadlua_register_module(lua_State* L, const char* name, lua_CFunction openf) {
     luaL_requiref(L, name, openf, 1);
     lua_pop(L, 1);

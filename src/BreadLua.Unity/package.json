@@ -1,0 +1,12 @@
+{
+  "name": "com.breadpack.nativelua",
+  "version": "0.1.0",
+  "displayName": "BreadLua - Native Lua for Unity",
+  "description": "Native Lua 5.4 for Unity with zero marshalling overhead via shared memory + Source Generator.",
+  "unity": "2021.3",
+  "keywords": ["lua", "scripting", "native", "performance"],
+  "author": {
+    "name": "BreadPack"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "BreadPack.NativeLua.Unity",
+  "rootNamespace": "BreadPack.NativeLua.Unity",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "autoReferenced": true,
+  "noEngineReferences": false
+}
