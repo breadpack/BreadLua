@@ -20,15 +20,14 @@ namespace BreadPack.NativeLua.Generator.Bind
 
             string mtName = "bread_" + info.ClassName;
 
-            // Forward-declare method wrappers so __index can reference them
+            // Forward-declare bind/apply and method wrappers so __index can reference them
+            sb.AppendLine("static int l_" + info.ClassName + "_bind(lua_State* L);");
+            sb.AppendLine("static int l_" + info.ClassName + "_apply(lua_State* L);");
             foreach (var m in info.Methods)
             {
                 sb.AppendLine("static int l_" + info.ClassName + "_" + m.LuaName + "(lua_State* L);");
             }
-            if (info.Methods.Count > 0)
-            {
-                sb.AppendLine();
-            }
+            sb.AppendLine();
 
             // Constructor
             if (info.Constructor != null)
@@ -41,6 +40,12 @@ namespace BreadPack.NativeLua.Generator.Bind
 
             // __newindex metamethod (property setters)
             EmitNewIndex(sb, info);
+
+            // bind() — snapshot all readable properties to a Lua table
+            EmitBind(sb, info);
+
+            // apply() — write back all writable properties from a Lua table
+            EmitApply(sb, info);
 
             // Method wrappers
             foreach (var m in info.Methods)
@@ -82,6 +87,16 @@ namespace BreadPack.NativeLua.Generator.Bind
             sb.AppendLine("static int l_" + info.ClassName + "_index(lua_State* L) {");
             sb.AppendLine("    void* handle = breadlua_get_object(L, 1);");
             sb.AppendLine("    const char* key = luaL_checkstring(L, 2);");
+
+            // bind/apply snapshot methods
+            sb.AppendLine("    if (strcmp(key, \"bind\") == 0) {");
+            sb.AppendLine("        lua_pushcfunction(L, l_" + info.ClassName + "_bind);");
+            sb.AppendLine("        return 1;");
+            sb.AppendLine("    }");
+            sb.AppendLine("    if (strcmp(key, \"apply\") == 0) {");
+            sb.AppendLine("        lua_pushcfunction(L, l_" + info.ClassName + "_apply);");
+            sb.AppendLine("        return 1;");
+            sb.AppendLine("    }");
 
             // Check methods first
             foreach (var m in info.Methods)
@@ -191,6 +206,109 @@ namespace BreadPack.NativeLua.Generator.Bind
 
             sb.AppendLine("    return 0;");
             sb.AppendLine("}");
+        }
+
+        private static void EmitBind(StringBuilder sb, BindClassInfo info)
+        {
+            int getterCount = 0;
+            foreach (var prop in info.Properties)
+            {
+                if (prop.HasGetter) getterCount++;
+            }
+
+            sb.AppendLine("static int l_" + info.ClassName + "_bind(lua_State* L) {");
+            sb.AppendLine("    void* handle = breadlua_get_object(L, 1);");
+            sb.AppendLine("    if (!handle) return luaL_error(L, \"null object\");");
+            sb.AppendLine();
+            sb.AppendLine("    lua_createtable(L, 0, " + (getterCount + 1) + ");");
+            sb.AppendLine();
+
+            foreach (var prop in info.Properties)
+            {
+                if (!prop.HasGetter) continue;
+                string getterFnType = MapCReturn(prop.CsType) + " (*)(void*)";
+                sb.AppendLine("    {");
+                sb.AppendLine("        " + getterFnType + " getter = (" + getterFnType + ")breadlua_get_fn(\"" + info.ClassName + ".get_" + prop.LuaName + "\");");
+                sb.AppendLine("        if (getter) {");
+                sb.AppendLine("            " + PushValue(prop.CsType, "getter(handle)") + ";");
+                sb.AppendLine("            lua_setfield(L, -2, \"" + prop.LuaName + "\");");
+                sb.AppendLine("        }");
+                sb.AppendLine("    }");
+            }
+
+            // Store handle for apply()
+            sb.AppendLine();
+            sb.AppendLine("    lua_pushlightuserdata(L, handle);");
+            sb.AppendLine("    lua_setfield(L, -2, \"_handle\");");
+            sb.AppendLine();
+            sb.AppendLine("    return 1;");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        private static void EmitApply(StringBuilder sb, BindClassInfo info)
+        {
+            sb.AppendLine("static int l_" + info.ClassName + "_apply(lua_State* L) {");
+            sb.AppendLine("    void* handle = NULL;");
+            sb.AppendLine("    int table_idx;");
+            sb.AppendLine();
+            sb.AppendLine("    if (lua_isuserdata(L, 1)) {");
+            sb.AppendLine("        handle = breadlua_get_object(L, 1);");
+            sb.AppendLine("        table_idx = 2;");
+            sb.AppendLine("    } else if (lua_istable(L, 1)) {");
+            sb.AppendLine("        lua_getfield(L, 1, \"_handle\");");
+            sb.AppendLine("        handle = lua_touserdata(L, -1);");
+            sb.AppendLine("        lua_pop(L, 1);");
+            sb.AppendLine("        table_idx = 1;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    if (!handle) return luaL_error(L, \"null object\");");
+            sb.AppendLine();
+
+            foreach (var prop in info.Properties)
+            {
+                if (!prop.HasSetter) continue;
+                string setterFnType = "void (*)(void*, " + MapCType(prop.CsType) + ")";
+                sb.AppendLine("    lua_getfield(L, table_idx, \"" + prop.LuaName + "\");");
+                sb.AppendLine("    if (!lua_isnil(L, -1)) {");
+                sb.AppendLine("        " + setterFnType + " setter = (" + setterFnType + ")breadlua_get_fn(\"" + info.ClassName + ".set_" + prop.LuaName + "\");");
+                sb.AppendLine("        if (setter) setter(handle, " + ToValue(prop.CsType, -1) + ");");
+                sb.AppendLine("    }");
+                sb.AppendLine("    lua_pop(L, 1);");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("    return 0;");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        private static string PushValue(string csType, string expr)
+        {
+            switch (csType)
+            {
+                case "int": return "lua_pushinteger(L, " + expr + ")";
+                case "long": return "lua_pushinteger(L, " + expr + ")";
+                case "float": return "lua_pushnumber(L, " + expr + ")";
+                case "double": return "lua_pushnumber(L, " + expr + ")";
+                case "bool": return "lua_pushboolean(L, " + expr + ")";
+                case "string": return "lua_pushstring(L, (const char*)" + expr + ")";
+                default: return "lua_pushnil(L)";
+            }
+        }
+
+        private static string ToValue(string csType, int idx)
+        {
+            switch (csType)
+            {
+                case "int": return "(int)luaL_checkinteger(L, " + idx + ")";
+                case "long": return "(long long)luaL_checkinteger(L, " + idx + ")";
+                case "float": return "(float)luaL_checknumber(L, " + idx + ")";
+                case "double": return "luaL_checknumber(L, " + idx + ")";
+                case "bool": return "lua_toboolean(L, " + idx + ")";
+                case "string": return "luaL_checkstring(L, " + idx + ")";
+                default: return "lua_touserdata(L, " + idx + ")";
+            }
         }
 
         private static string MapCType(string csType)
