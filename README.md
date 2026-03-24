@@ -160,7 +160,7 @@ C# App <--shared memory--> C Module <--native--> lua54 VM
 
 Install via UPM (Package Manager):
 ```json
-{ "com.breadpack.nativelua": "file:path/to/BreadLua.Unity" }
+{ "dev.breadpack.nativelua": "file:path/to/BreadLua.Unity" }
 ```
 
 Place native plugins in `Plugins/{Windows,Android,iOS,macOS}/`.

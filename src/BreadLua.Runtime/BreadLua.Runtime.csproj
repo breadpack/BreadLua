@@ -5,6 +5,24 @@
     <RootNamespace>BreadPack.NativeLua</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <!-- NuGet package metadata -->
+  <PropertyGroup>
+    <PackageId>BreadPack.NativeLua</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>BreadPack</Authors>
+    <Description>Native Lua 5.4 for .NET — zero marshalling overhead via shared memory + Source Generator.</Description>
+    <PackageTags>lua;scripting;native;gamedev;source-generator</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/breadpack/BreadLua</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/breadpack/BreadLua</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="BreadLua.Benchmarks" />
     <InternalsVisibleTo Include="BreadLua.Tests" />
@@ -13,6 +31,8 @@
     <ProjectReference Include="..\BreadLua.Generator\BreadLua.Generator.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!-- Native DLL copy for local development -->
   <ItemGroup>
     <None Include="..\BreadLua.Native\build\bin\Release\breadlua_native.dll"
           CopyToOutputDirectory="PreserveNewest" Link="breadlua_native.dll"
@@ -20,5 +40,36 @@
     <None Include="..\BreadLua.Native\build\bin\breadlua_native.dll"
           CopyToOutputDirectory="PreserveNewest" Link="breadlua_native.dll"
           Condition="Exists('..\BreadLua.Native\build\bin\breadlua_native.dll')" />
+  </ItemGroup>
+
+  <!-- NuGet package content: README -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- NuGet package content: MSBuild targets for native DLL copy -->
+  <ItemGroup>
+    <None Include="BreadPack.NativeLua.targets" Pack="true" PackagePath="build\" />
+    <None Include="BreadPack.NativeLua.targets" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
+  <!-- Native runtime libraries for NuGet -->
+  <ItemGroup>
+    <!-- Windows -->
+    <None Include="..\BreadLua.Native\build-windows\bin\Release\breadlua_native.dll"
+          Pack="true" PackagePath="runtimes\win-x64\native\"
+          Condition="Exists('..\BreadLua.Native\build-windows\bin\Release\breadlua_native.dll')" />
+    <!-- Fallback: existing build directory -->
+    <None Include="..\BreadLua.Native\build\bin\Release\breadlua_native.dll"
+          Pack="true" PackagePath="runtimes\win-x64\native\"
+          Condition="Exists('..\BreadLua.Native\build\bin\Release\breadlua_native.dll') And !Exists('..\BreadLua.Native\build-windows\bin\Release\breadlua_native.dll')" />
+    <!-- Linux -->
+    <None Include="..\BreadLua.Native\build-linux\bin\libbreadlua_native.so"
+          Pack="true" PackagePath="runtimes\linux-x64\native\"
+          Condition="Exists('..\BreadLua.Native\build-linux\bin\libbreadlua_native.so')" />
+    <!-- macOS -->
+    <None Include="..\BreadLua.Native\build-macos\bin\libbreadlua_native.dylib"
+          Pack="true" PackagePath="runtimes\osx\native\"
+          Condition="Exists('..\BreadLua.Native\build-macos\bin\libbreadlua_native.dylib')" />
   </ItemGroup>
 </Project>

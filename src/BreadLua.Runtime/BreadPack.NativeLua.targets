@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' Or ('$(RuntimeIdentifier)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')">
+    <None Include="$(MSBuildThisFileDirectory)..\runtimes\win-x64\native\breadlua_native.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="breadlua_native.dll"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\runtimes\win-x64\native\breadlua_native.dll')" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' Or ('$(RuntimeIdentifier)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')">
+    <None Include="$(MSBuildThisFileDirectory)..\runtimes\linux-x64\native\libbreadlua_native.so"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libbreadlua_native.so"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\runtimes\linux-x64\native\libbreadlua_native.so')" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64' Or ('$(RuntimeIdentifier)' == '' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true')">
+    <None Include="$(MSBuildThisFileDirectory)..\runtimes\osx\native\libbreadlua_native.dylib"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libbreadlua_native.dylib"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\runtimes\osx\native\libbreadlua_native.dylib')" />
+  </ItemGroup>
+</Project>

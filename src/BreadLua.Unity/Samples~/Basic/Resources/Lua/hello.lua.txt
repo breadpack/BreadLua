@@ -1,0 +1,5 @@
+print("Hello from Lua script file!")
+
+function greet(name)
+    return "Hello, " .. name .. "!"
+end

@@ -6,7 +6,7 @@ Add to your Unity project's `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.breadpack.nativelua": "file:../../src/BreadLua.Unity"
+    "dev.breadpack.nativelua": "file:../../src/BreadLua.Unity"
   }
 }
 ```
