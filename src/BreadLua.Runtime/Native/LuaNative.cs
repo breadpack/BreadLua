@@ -81,4 +81,10 @@ internal static class LuaNative
 
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public static extern void breadlua_set_metatable_fn(IntPtr L, string mtName, string fnName, IntPtr fn);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void breadlua_set_generic_callback(IntPtr fn);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern void breadlua_register_callback(IntPtr L, string name);
 }
