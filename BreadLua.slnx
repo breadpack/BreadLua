@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BreadLua.Generator/BreadLua.Generator.csproj" />
+    <Project Path="src/BreadLua.Runtime/BreadLua.Runtime.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BreadLua.Tests/BreadLua.Tests.csproj" />
+  </Folder>
+</Solution>
