@@ -1,3 +1,4 @@
+#include <string.h>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -86,4 +87,29 @@ BREADLUA_EXPORT int breadlua_gettop(lua_State* L) {
 BREADLUA_EXPORT void breadlua_register_module(lua_State* L, const char* name, lua_CFunction openf) {
     luaL_requiref(L, name, openf, 1);
     lua_pop(L, 1);
+}
+
+/* Function pointer registration for [LuaModule] */
+#define BREAD_MAX_FN 256
+static struct {
+    const char* name;
+    void* fn_ptr;
+} g_fn_registry[BREAD_MAX_FN];
+static int g_fn_count = 0;
+
+BREADLUA_EXPORT void breadlua_register_fn(const char* name, void* fn_ptr) {
+    if (g_fn_count < BREAD_MAX_FN) {
+        g_fn_registry[g_fn_count].name = name;
+        g_fn_registry[g_fn_count].fn_ptr = fn_ptr;
+        g_fn_count++;
+    }
+}
+
+BREADLUA_EXPORT void* breadlua_get_fn(const char* name) {
+    for (int i = 0; i < g_fn_count; i++) {
+        if (strcmp(g_fn_registry[i].name, name) == 0) {
+            return g_fn_registry[i].fn_ptr;
+        }
+    }
+    return NULL;
 }

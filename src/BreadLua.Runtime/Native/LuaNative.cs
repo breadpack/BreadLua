@@ -60,4 +60,25 @@ internal static class LuaNative
 
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
     public static extern int breadlua_gettop(IntPtr L);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern void breadlua_register_fn(string name, IntPtr fnPtr);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern IntPtr breadlua_get_fn(string name);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void breadlua_set_release_fn(IntPtr releaseFn);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern void breadlua_push_object(IntPtr L, IntPtr gcHandle, string metatableName);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr breadlua_get_object(IntPtr L, int index);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern void breadlua_create_metatable(IntPtr L, string name);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern void breadlua_set_metatable_fn(IntPtr L, string mtName, string fnName, IntPtr fn);
 }

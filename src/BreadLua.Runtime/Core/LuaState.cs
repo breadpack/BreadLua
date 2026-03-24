@@ -79,6 +79,24 @@ public class LuaState : IDisposable
         if (_disposed) throw new ObjectDisposedException(nameof(LuaState));
     }
 
+    public void CreateMetatable(string name)
+    {
+        ThrowIfDisposed();
+        LuaNative.breadlua_create_metatable(_L, name);
+    }
+
+    public void PushObject(IntPtr gcHandle, string metatableName)
+    {
+        ThrowIfDisposed();
+        LuaNative.breadlua_push_object(_L, gcHandle, metatableName);
+    }
+
+    public void RegisterCFunction(string metatableName, string funcName, IntPtr cFunction)
+    {
+        ThrowIfDisposed();
+        LuaNative.breadlua_set_metatable_fn(_L, metatableName, funcName, cFunction);
+    }
+
     public void Dispose()
     {
         if (!_disposed)
