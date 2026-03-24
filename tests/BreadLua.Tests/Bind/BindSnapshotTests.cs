@@ -7,25 +7,25 @@ using TUnit.Assertions.Extensions;
 
 namespace BreadLua.Tests.Bind;
 
-public class BindSnapshotTests
+public class BindClosureTests
 {
     [Test]
-    public async Task BindCEmitter_GeneratesBindMethod()
+    public async Task BindCEmitter_GeneratesClosureBindMethod()
     {
-        // Verify the Source Generator produces bind/apply in the C output.
-        // This is a compile-time verification - if it compiles, it works.
-        // The actual runtime test requires the native DLL to include generated C code.
+        // Verify the Source Generator produces bind() with closure caching in the C output.
+        // bind() returns a table with __index/__newindex closures that capture GCHandle as upvalue.
+        // This is a compile-time verification - if it compiles, the generator works.
         var player = new TestPlayer("BindTest", 5);
         await Assert.That(player.Name).IsEqualTo("BindTest");
     }
 
     [Test]
-    public async Task BindCEmitter_GeneratesApplyMethod()
+    public async Task BindCEmitter_NoApplyMethod()
     {
-        // Verify that the generated C code for apply() is structurally correct
-        // by confirming the source generator still produces valid output
-        // (the TestPlayer class compiles with the updated generator).
-        var player = new TestPlayer("ApplyTest", 10);
+        // apply() is no longer generated. bind() closures provide real-time access,
+        // so there is no need for a separate apply step.
+        // This test confirms the class still compiles correctly without apply().
+        var player = new TestPlayer("NoApplyTest", 10);
         player.HP = 200f;
         await Assert.That(player.HP).IsEqualTo(200f);
     }

@@ -20,7 +20,7 @@ public class BindOptimizationBenchmark
         lua = new LuaState();
 
         lua.DoString(@"
-            -- Simulate class objects as tables (bind() result)
+            -- Simulate class objects as tables (plain data)
             units_table = {}
             for i = 1, " + UnitCount + @" do
                 units_table[i] = {
@@ -32,7 +32,7 @@ public class BindOptimizationBenchmark
                 }
             end
 
-            -- Pattern 1: table access (simulates bind() snapshot)
+            -- Pattern 1: plain table access (baseline)
             function access_table_pattern()
                 local total = 0
                 for i = 1, #units_table do
@@ -42,18 +42,13 @@ public class BindOptimizationBenchmark
                 return total
             end
 
-            -- Pattern 2: function call per field (simulates current __index)
-            -- Each getter is a function call (simulates C function overhead)
-            function make_getter(t, key)
-                return function() return t[key] end
-            end
-
+            -- Pattern 2: __index metatable (simulates current C getter dispatch via userdata)
             units_meta = {}
             for i = 1, " + UnitCount + @" do
                 local data = units_table[i]
                 units_meta[i] = setmetatable({}, {
                     __index = function(self, key)
-                        return data[key]  -- simulates C getter dispatch
+                        return data[key]  -- simulates C getter dispatch via strcmp
                     end
                 })
             end
@@ -67,19 +62,31 @@ public class BindOptimizationBenchmark
                 return total
             end
 
-            -- Pattern 3: bind once, access table
-            function bind_then_access_pattern()
+            -- Pattern 3: bind() closure caching via __index with upvalue
+            -- Simulates what bind() produces: a table with __index/__newindex closures
+            -- that capture the handle (source data) as upvalue — property syntax, real-time access
+            function make_bound_units()
+                local bound = {}
+                for i = 1, #units_table do
+                    local src = units_table[i]  -- captured as upvalue (like GCHandle)
+                    bound[i] = setmetatable({}, {
+                        __index = function(self, key)
+                            return src[key]  -- direct upvalue access, no userdata extraction
+                        end,
+                        __newindex = function(self, key, value)
+                            src[key] = value
+                        end,
+                    })
+                end
+                return bound
+            end
+
+            bound_units = make_bound_units()
+
+            function access_closure_pattern()
                 local total = 0
-                for i = 1, #units_meta do
-                    -- bind(): copy metatable obj to plain table (simulated)
-                    local u = {}
-                    local src = units_table[i]
-                    u.hp = src.hp
-                    u.atk = src.atk
-                    u.def = src.def
-                    u.x = src.x
-                    u.y = src.y
-                    -- now access plain table
+                for i = 1, #bound_units do
+                    local u = bound_units[i]
                     total = total + u.hp + u.atk + u.def + u.x + u.y
                 end
                 return total
@@ -102,9 +109,9 @@ public class BindOptimizationBenchmark
         lua.Call("access_meta_pattern");
     }
 
-    [Benchmark(Description = "Lua bind() snapshot + table access (50 units x 5 fields)")]
-    public void LuaBindSnapshot()
+    [Benchmark(Description = "Lua bind() closure access (50 units x 5 fields)")]
+    public void LuaBindClosure()
     {
-        lua.Call("bind_then_access_pattern");
+        lua.Call("access_closure_pattern");
     }
 }
