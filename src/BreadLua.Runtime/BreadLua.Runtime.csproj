@@ -9,4 +9,12 @@
     <ProjectReference Include="..\BreadLua.Generator\BreadLua.Generator.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\BreadLua.Native\build\bin\Release\breadlua_native.dll"
+          CopyToOutputDirectory="PreserveNewest" Link="breadlua_native.dll"
+          Condition="Exists('..\BreadLua.Native\build\bin\Release\breadlua_native.dll')" />
+    <None Include="..\BreadLua.Native\build\bin\breadlua_native.dll"
+          CopyToOutputDirectory="PreserveNewest" Link="breadlua_native.dll"
+          Condition="Exists('..\BreadLua.Native\build\bin\breadlua_native.dll')" />
+  </ItemGroup>
 </Project>
