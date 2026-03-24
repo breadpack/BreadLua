@@ -8,6 +8,7 @@ namespace BreadPack.NativeLua.Generator.Util
         {
             switch (csType)
             {
+                case "void": return "void";
                 case "int":
                 case "Int32": return "int";
                 case "long":

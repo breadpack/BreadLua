@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="BreadLua.Benchmarks" />
+    <InternalsVisibleTo Include="BreadLua.Tests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BreadLua.Generator\BreadLua.Generator.csproj"

@@ -23,8 +23,8 @@ namespace BreadPack.NativeLua.Generator
                 if (info == null) return;
 
                 spc.AddSource(info.TypeName + "Bridge.g.cs", BridgeCSharpEmitter.Emit(info));
-                spc.AddSource("bread_" + info.LuaName + ".c.g.txt", BridgeCEmitter.Emit(info));
-                spc.AddSource(info.LuaName + "_wrapper.lua.g.txt", BridgeLuaEmitter.Emit(info));
+                spc.AddSource("bread_" + info.LuaName + ".c.g.txt", WrapAsComment(BridgeCEmitter.Emit(info)));
+                spc.AddSource(info.LuaName + "_wrapper.lua.g.txt", WrapAsComment(BridgeLuaEmitter.Emit(info)));
             });
 
             var moduleClasses = context.SyntaxProvider
@@ -39,7 +39,7 @@ namespace BreadPack.NativeLua.Generator
                 if (info == null) return;
 
                 spc.AddSource(info.ClassName + "Module.g.cs", ModuleCSharpEmitter.Emit(info));
-                spc.AddSource("bread_" + info.LuaModuleName + "_module.c.g.txt", ModuleCEmitter.Emit(info));
+                spc.AddSource("bread_" + info.LuaModuleName + "_module.c.g.txt", WrapAsComment(ModuleCEmitter.Emit(info)));
             });
 
             var bindClasses = context.SyntaxProvider
@@ -54,9 +54,20 @@ namespace BreadPack.NativeLua.Generator
                 if (info == null) return;
 
                 spc.AddSource(info.ClassName + "Bind.g.cs", BindCSharpEmitter.Emit(info));
-                spc.AddSource("bread_" + info.ClassName + "_bind.c.g.txt", BindCEmitter.Emit(info));
-                spc.AddSource(info.ClassName + "_wrapper.lua.g.txt", BindLuaEmitter.Emit(info));
+                spc.AddSource("bread_" + info.ClassName + "_bind.c.g.txt", WrapAsComment(BindCEmitter.Emit(info)));
+                spc.AddSource(info.ClassName + "_wrapper.lua.g.txt", WrapAsComment(BindLuaEmitter.Emit(info)));
             });
+        }
+
+        /// <summary>
+        /// Wraps non-C# content (C code, Lua code) in a C# block comment
+        /// so it remains valid when AddSource appends .cs extension.
+        /// </summary>
+        private static string WrapAsComment(string content)
+        {
+            // Escape any existing block comment end sequences in content
+            var escaped = content.Replace("*/", "* /");
+            return "/*\n" + escaped + "\n*/\n";
         }
     }
 }

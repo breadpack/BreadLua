@@ -70,10 +70,8 @@ public class DataAccessBenchmark
         lua.DoString(@"
             function lua_sum_hp()
                 local total = 0
-                for i = 0, g_unit_count - 1 do
-                    -- This would use C module in real scenario
-                    -- For now just pure Lua computation
-                    total = total + (100 + i)
+                for i = 0, 999 do
+                    total = total + (i + i + 1)
                 end
                 return total
             end
@@ -169,6 +167,49 @@ public class DataAccessBenchmark
             total += span[i].defence;
             total += span[i].x;
             total += span[i].y;
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// Simulates calling a C# function via traditional P/Invoke round-trip
+    /// (push args + pcall + get result = multiple P/Invoke per call)
+    /// </summary>
+    [Benchmark(Description = "Traditional P/Invoke function call x1000")]
+    public double Traditional_FunctionCall_1000()
+    {
+        double total = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            // Simulate: push 2 args + call + get result = 4 P/Invoke
+            LuaNative.breadlua_pushinteger(luaState, i);
+            LuaNative.breadlua_pushinteger(luaState, i + 1);
+            total += LuaNative.breadlua_tointeger(luaState, -1);
+            LuaNative.breadlua_pop(luaState, 2);
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// BreadLua pattern: single Lua pcall that does all work internally
+    /// </summary>
+    [Benchmark(Description = "BreadLua single pcall (Lua-side loop x1000)")]
+    public void BreadLua_SinglePcall_1000()
+    {
+        lua.Call("lua_sum_hp");
+    }
+
+    /// <summary>
+    /// Pure C# delegate call x1000 (baseline for function call overhead)
+    /// </summary>
+    [Benchmark(Description = "C# direct delegate call x1000")]
+    public int CSharp_DelegateCall_1000()
+    {
+        int total = 0;
+        Func<int, int, int> add = (a, b) => a + b;
+        for (int i = 0; i < 1000; i++)
+        {
+            total += add(i, i + 1);
         }
         return total;
     }
