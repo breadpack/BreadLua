@@ -6,6 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="BreadLua.Benchmarks" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\BreadLua.Generator\BreadLua.Generator.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
