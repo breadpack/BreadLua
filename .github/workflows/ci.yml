@@ -234,6 +234,18 @@ jobs:
           mkdir -p src/BreadLua.Unity/${{ matrix.pluginDir }}
           cp native-lib/${{ matrix.lib }} src/BreadLua.Unity/${{ matrix.pluginDir }}/
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build Runtime DLL for Unity
+        run: dotnet build src/BreadLua.Runtime/ -f netstandard2.1 -c Release
+
+      - name: Copy Runtime DLL to Unity package
+        shell: bash
+        run: cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
+
       - uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -288,6 +300,18 @@ jobs:
           if [ -f artifacts/native-macos-universal/libbreadlua_native.dylib ]; then
             cp artifacts/native-macos-universal/libbreadlua_native.dylib src/BreadLua.Unity/Plugins/macOS/ || true
           fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build Runtime DLL for Unity
+        run: dotnet build src/BreadLua.Runtime/ -f netstandard2.1 -c Release
+
+      - name: Copy Runtime DLL to Unity package
+        shell: bash
+        run: cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
 
       - uses: game-ci/unity-builder@v4
         env:
