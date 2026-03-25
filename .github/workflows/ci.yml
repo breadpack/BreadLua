@@ -1,0 +1,400 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ================================
+  # Native Build - Desktop
+  # ================================
+  build-native-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build native (Windows x64)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -A x64
+          cmake --build build --config Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-windows-x64
+          path: src/BreadLua.Native/build/bin/Release/breadlua_native.dll
+
+  build-native-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build native (Linux x64)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-x64
+          path: src/BreadLua.Native/build/bin/libbreadlua_native.so
+
+  build-native-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build native (macOS Universal)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          cmake --build build --config Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-macos-universal
+          path: src/BreadLua.Native/build/bin/libbreadlua_native.dylib
+
+  # ================================
+  # Native Build - Mobile
+  # ================================
+  build-native-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Android NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build native (Android arm64-v8a)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build-arm64 \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-21 \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-arm64 --config Release
+
+      - name: Build native (Android armeabi-v7a)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build-armv7 \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=armeabi-v7a \
+            -DANDROID_PLATFORM=android-21 \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-armv7 --config Release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-android
+          path: |
+            src/BreadLua.Native/build-arm64/bin/libbreadlua_native.so
+            src/BreadLua.Native/build-armv7/bin/libbreadlua_native.so
+
+  build-native-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build native (iOS arm64, static)
+        run: |
+          cd src/BreadLua.Native
+          cmake -B build-ios \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF
+          cmake --build build-ios --config Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ios-arm64
+          path: src/BreadLua.Native/build-ios/bin/libbreadlua_native.a
+
+  # ================================
+  # .NET Build + Test
+  # ================================
+  test-dotnet:
+    needs: [build-native-windows, build-native-linux, build-native-macos]
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: native-windows-x64
+            lib: breadlua_native.dll
+          - os: ubuntu-latest
+            artifact: native-linux-x64
+            lib: libbreadlua_native.so
+          - os: macos-latest
+            artifact: native-macos-universal
+            lib: libbreadlua_native.dylib
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Download native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: native-lib
+
+      - name: Copy native lib to test output
+        shell: bash
+        run: |
+          mkdir -p tests/BreadLua.Tests/bin/Debug/net9.0/
+          cp native-lib/${{ matrix.lib }} tests/BreadLua.Tests/bin/Debug/net9.0/ || true
+          mkdir -p src/BreadLua.Runtime/bin/Debug/net9.0/
+          cp native-lib/${{ matrix.lib }} src/BreadLua.Runtime/bin/Debug/net9.0/ || true
+
+      - name: Build
+        run: dotnet build
+
+      - name: Test
+        run: dotnet run --project tests/BreadLua.Tests/
+
+  # ================================
+  # Collect all native binaries -> Unity plugins
+  # ================================
+  package-unity:
+    needs: [build-native-windows, build-native-linux, build-native-macos, build-native-android, build-native-ios, test-dotnet]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble Unity plugins
+        run: |
+          mkdir -p unity-package/Plugins/Windows
+          mkdir -p unity-package/Plugins/Linux
+          mkdir -p unity-package/Plugins/macOS
+          mkdir -p unity-package/Plugins/Android/arm64-v8a
+          mkdir -p unity-package/Plugins/Android/armeabi-v7a
+          mkdir -p unity-package/Plugins/iOS
+
+          cp artifacts/native-windows-x64/breadlua_native.dll unity-package/Plugins/Windows/ || true
+          cp artifacts/native-linux-x64/libbreadlua_native.so unity-package/Plugins/Linux/ || true
+          cp artifacts/native-macos-universal/libbreadlua_native.dylib unity-package/Plugins/macOS/ || true
+          cp artifacts/native-ios-arm64/libbreadlua_native.a unity-package/Plugins/iOS/ || true
+
+          find artifacts/native-android/ -name "*.so" -path "*arm64*" -exec cp {} unity-package/Plugins/Android/arm64-v8a/ \; || true
+          find artifacts/native-android/ -name "*.so" -path "*armv7*" -exec cp {} unity-package/Plugins/Android/armeabi-v7a/ \; || true
+
+      - name: Upload Unity plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: breadlua-unity-plugins
+          path: unity-package/
+
+  # ================================
+  # Unity Play Mode Tests (GameCI)
+  # ================================
+  unity-test:
+    needs: [build-native-windows, build-native-linux, build-native-macos, test-dotnet]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: native-linux-x64
+            pluginDir: Plugins/Linux
+            lib: libbreadlua_native.so
+          - os: macos-latest
+            artifact: native-macos-universal
+            pluginDir: Plugins/macOS
+            lib: libbreadlua_native.dylib
+          - os: windows-latest
+            artifact: native-windows-x64
+            pluginDir: Plugins/Windows
+            lib: breadlua_native.dll
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: native-lib
+
+      - name: Copy native lib to Unity package plugins
+        shell: bash
+        run: |
+          mkdir -p src/BreadLua.Unity/${{ matrix.pluginDir }}
+          cp native-lib/${{ matrix.lib }} src/BreadLua.Unity/${{ matrix.pluginDir }}/
+
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: playmode
+          projectPath: tests/BreadLua.Unity.TestProject
+          unityVersion: auto
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unity-test-results-${{ matrix.os }}
+          path: artifacts/
+
+  # ================================
+  # Unity Build for Mobile (IL2CPP)
+  # ================================
+  unity-build:
+    needs: [unity-test, build-native-android, build-native-ios]
+    strategy:
+      matrix:
+        include:
+          - targetPlatform: Android
+            os: ubuntu-latest
+          - targetPlatform: iOS
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Copy native libs to Unity package
+        shell: bash
+        run: |
+          if [ -d artifacts/native-android ]; then
+            find artifacts/native-android -name "*.so" -path "*arm64*" -exec cp {} src/BreadLua.Unity/Plugins/Android/arm64-v8a/ \; || true
+            find artifacts/native-android -name "*.so" -path "*armv7*" -exec cp {} src/BreadLua.Unity/Plugins/Android/armeabi-v7a/ \; || true
+          fi
+          if [ -f artifacts/native-ios-arm64/libbreadlua_native.a ]; then
+            cp artifacts/native-ios-arm64/libbreadlua_native.a src/BreadLua.Unity/Plugins/iOS/ || true
+          fi
+          if [ -f artifacts/native-linux-x64/libbreadlua_native.so ]; then
+            cp artifacts/native-linux-x64/libbreadlua_native.so src/BreadLua.Unity/Plugins/Linux/ || true
+          fi
+          if [ -f artifacts/native-macos-universal/libbreadlua_native.dylib ]; then
+            cp artifacts/native-macos-universal/libbreadlua_native.dylib src/BreadLua.Unity/Plugins/macOS/ || true
+          fi
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          projectPath: tests/BreadLua.Unity.TestProject
+          unityVersion: auto
+
+      - name: Archive and export iOS
+        if: matrix.targetPlatform == 'iOS'
+        run: |
+          xcodebuild archive \
+            -project build/iOS/Unity-iPhone.xcodeproj \
+            -scheme Unity-iPhone \
+            -archivePath build/iOS/app.xcarchive \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="-" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES || echo "iOS archive failed — expected in CI without signing"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-build-${{ matrix.targetPlatform }}
+          path: build/
+
+  # ================================
+  # Firebase Test Lab (main branch only)
+  # ================================
+  firebase-test:
+    needs: [unity-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: android
+            artifact: unity-build-Android
+            device: model=Pixel6,version=33
+          - platform: ios
+            artifact: unity-build-iOS
+            device: model=iphone13pro,version=16.6
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build
+
+      - name: Find app binary
+        id: find-app
+        run: |
+          APK_PATH=$(find build -name "*.apk" -type f | head -1)
+          IPA_PATH=$(find build -name "*.ipa" -type f | head -1)
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "ipa_path=$IPA_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Run Firebase Test Lab (Android)
+        if: matrix.platform == 'android' && steps.find-app.outputs.apk_path != ''
+        run: |
+          gcloud firebase test android run \
+            --type game-loop \
+            --app "${{ steps.find-app.outputs.apk_path }}" \
+            --device ${{ matrix.device }} \
+            --timeout 5m \
+            --results-bucket=${{ secrets.GCP_PROJECT_ID }}-test-results \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Run Firebase Test Lab (iOS - beta)
+        if: matrix.platform == 'ios' && steps.find-app.outputs.ipa_path != ''
+        continue-on-error: true
+        run: |
+          gcloud beta firebase test ios run \
+            --type game-loop \
+            --app "${{ steps.find-app.outputs.ipa_path }}" \
+            --device ${{ matrix.device }} \
+            --timeout 5m \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Check test results (Android)
+        if: matrix.platform == 'android' && steps.find-app.outputs.apk_path != ''
+        run: |
+          sleep 10
+          MATRIX_ID=$(gcloud firebase test android results list \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --format="value(testMatrixId)" 2>/dev/null | tail -1)
+          if [ -n "$MATRIX_ID" ]; then
+            gsutil cp "gs://${{ secrets.GCP_PROJECT_ID }}-test-results/$MATRIX_ID/*/logcat" ./logcat.txt 2>/dev/null || true
+            if [ -f ./logcat.txt ]; then
+              if grep -q "\[BREADLUA_TEST\] FAIL:" ./logcat.txt; then
+                echo "::error::Firebase Test Lab tests failed"
+                grep "\[BREADLUA_TEST\]" ./logcat.txt
+                exit 1
+              fi
+              grep "\[BREADLUA_TEST\] SUMMARY:" ./logcat.txt || echo "No test summary found in logcat"
+            fi
+          fi
