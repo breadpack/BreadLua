@@ -67,9 +67,10 @@ public class LuaTinker
         LuaNative.breadlua_register_callback(_state.Handle, name);
     }
 
+    [AOT.MonoPInvokeCallback(typeof(GenericCallbackDelegate))]
     private static int OnGenericCallback(IntPtr L, IntPtr namePtr)
     {
-        string? name = Marshal.PtrToStringAnsi(namePtr);
+        string? name = Marshal.PtrToStringUTF8(namePtr);
         if (name == null || !_bindings.TryGetValue(name, out var del))
             return 0;
 
@@ -96,7 +97,7 @@ public class LuaTinker
             if (del is Func<string, string> strFunc)
             {
                 IntPtr ptr = LuaNative.breadlua_tostring(L, 1);
-                string arg = ptr == IntPtr.Zero ? "" : Marshal.PtrToStringAnsi(ptr) ?? "";
+                string arg = ptr == IntPtr.Zero ? "" : Marshal.PtrToStringUTF8(ptr) ?? "";
                 string result = strFunc(arg);
                 LuaNative.breadlua_pushstring(L, result);
                 return 1;
@@ -105,7 +106,7 @@ public class LuaTinker
             if (del is Action<string> strAction)
             {
                 IntPtr ptr = LuaNative.breadlua_tostring(L, 1);
-                string arg = ptr == IntPtr.Zero ? "" : Marshal.PtrToStringAnsi(ptr) ?? "";
+                string arg = ptr == IntPtr.Zero ? "" : Marshal.PtrToStringUTF8(ptr) ?? "";
                 strAction(arg);
                 return 0;
             }
@@ -132,3 +133,14 @@ public class LuaTinker
         return 0;
     }
 }
+
+#if !UNITY_5_3_OR_NEWER
+namespace AOT
+{
+    [System.AttributeUsage(System.AttributeTargets.Method)]
+    internal class MonoPInvokeCallbackAttribute : System.Attribute
+    {
+        public MonoPInvokeCallbackAttribute(System.Type type) { }
+    }
+}
+#endif

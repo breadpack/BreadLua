@@ -142,7 +142,7 @@ public class LuaState : IDisposable
         else if (typeof(T) == typeof(string))
         {
             IntPtr ptr = LuaNative.breadlua_tostring(_L, index);
-            result = ptr == IntPtr.Zero ? null! : Marshal.PtrToStringAnsi(ptr)!;
+            result = ptr == IntPtr.Zero ? null! : Marshal.PtrToStringUTF8(ptr)!;
         }
         else
             throw new LuaException("Unsupported return type: " + typeof(T).Name);
@@ -168,7 +168,7 @@ public class LuaState : IDisposable
     private string? GetTopString()
     {
         IntPtr ptr = LuaNative.breadlua_tostring(_L, -1);
-        return ptr == IntPtr.Zero ? null : Marshal.PtrToStringAnsi(ptr);
+        return ptr == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(ptr);
     }
 
     private void ThrowIfDisposed()
