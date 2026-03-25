@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 26
+  productName: BreadLua.Tests
+  companyName: BreadPack
+  defaultScreenWidth: 1024
+  defaultScreenHeight: 768
+  scriptingBackend:
+    Android: 1
+    iPhone: 1
+    Standalone: 0
+  il2cppCompilerConfiguration:
+    Android: 1
+    iPhone: 1
+  apiCompatibilityLevel:
+    Android: 6
+    iPhone: 6
+    Standalone: 6
+  bundleVersion: 0.1.0
+  applicationIdentifier:
+    Android: dev.breadpack.nativelua.tests
+    iPhone: dev.breadpack.nativelua.tests
+    Standalone: dev.breadpack.nativelua.tests
