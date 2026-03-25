@@ -7,8 +7,10 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "BreadLua.Runtime.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "noEngineReferences": false

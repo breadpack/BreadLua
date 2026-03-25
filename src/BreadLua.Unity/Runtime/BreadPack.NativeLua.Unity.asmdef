@@ -5,6 +5,10 @@
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": true,
+  "overrideReferences": true,
+  "precompiledReferences": [
+      "BreadLua.Runtime.dll"
+  ],
   "autoReferenced": true,
   "noEngineReferences": false
 }
