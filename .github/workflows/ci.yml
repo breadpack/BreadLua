@@ -242,9 +242,12 @@ jobs:
       - name: Build Runtime DLL for Unity
         run: dotnet build src/BreadLua.Runtime/ -f netstandard2.1 -c Release
 
-      - name: Copy Runtime DLL to Unity package
+      - name: Copy Runtime DLL to Unity package and test project
         shell: bash
-        run: cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
+        run: |
+          cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
+          mkdir -p tests/BreadLua.Unity.TestProject/Assets/Plugins
+          cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll tests/BreadLua.Unity.TestProject/Assets/Plugins/
 
       - uses: game-ci/unity-test-runner@v4
         env:
@@ -309,9 +312,12 @@ jobs:
       - name: Build Runtime DLL for Unity
         run: dotnet build src/BreadLua.Runtime/ -f netstandard2.1 -c Release
 
-      - name: Copy Runtime DLL to Unity package
+      - name: Copy Runtime DLL to Unity package and test project
         shell: bash
-        run: cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
+        run: |
+          cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll src/BreadLua.Unity/Plugins/
+          mkdir -p tests/BreadLua.Unity.TestProject/Assets/Plugins
+          cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll tests/BreadLua.Unity.TestProject/Assets/Plugins/
 
       - uses: game-ci/unity-builder@v4
         env:
