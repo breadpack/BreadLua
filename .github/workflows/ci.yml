@@ -240,8 +240,9 @@ jobs:
         with:
           testMode: playmode
           projectPath: tests/BreadLua.Unity.TestProject
-          unityVersion: auto
+          unityVersion: 6000.3.8f1
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          customImage: unityci/editor:ubuntu-6000.3.8f1-base-3
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -293,7 +294,7 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: tests/BreadLua.Unity.TestProject
-          unityVersion: auto
+          unityVersion: 6000.3.8f1
 
       - name: Archive and export iOS
         if: matrix.targetPlatform == 'iOS'
