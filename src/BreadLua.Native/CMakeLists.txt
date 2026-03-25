@@ -42,7 +42,7 @@ if(NOT WIN32)
 endif()
 
 if(ANDROID)
-    target_compile_definitions(breadlua_native PRIVATE LUA_USE_LINUX _LARGEFILE_SOURCE)
+    target_compile_definitions(breadlua_native PRIVATE LUA_USE_LINUX _LARGEFILE_SOURCE _FILE_OFFSET_BITS=64)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
