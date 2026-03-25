@@ -214,10 +214,6 @@ jobs:
             artifact: native-linux-x64
             pluginDir: Plugins/Linux
             lib: libbreadlua_native.so
-          - os: macos-latest
-            artifact: native-macos-universal
-            pluginDir: Plugins/macOS
-            lib: libbreadlua_native.dylib
           - os: windows-latest
             artifact: native-windows-x64
             pluginDir: Plugins/Windows
