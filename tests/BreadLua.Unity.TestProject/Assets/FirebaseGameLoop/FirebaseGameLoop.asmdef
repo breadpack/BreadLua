@@ -1,0 +1,15 @@
+{
+    "name": "FirebaseGameLoop",
+    "rootNamespace": "BreadPack.NativeLua.Unity.Tests.GameLoop",
+    "references": [
+        "BreadPack.NativeLua.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "noEngineReferences": false
+}
