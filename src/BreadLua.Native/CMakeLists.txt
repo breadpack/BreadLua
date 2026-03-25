@@ -43,12 +43,8 @@ endif()
 
 if(ANDROID)
     target_compile_definitions(breadlua_native PRIVATE LUA_USE_LINUX)
-    # Android 32-bit NDK lacks fseeko/ftello; override Lua's l_fseek/l_ftell to use standard fseek/ftell
-    target_compile_definitions(breadlua_native PRIVATE
-        "l_fseek(f,o,w)=fseek(f,o,w)"
-        "l_ftell(f)=ftell(f)"
-        "l_seeknum=long"
-    )
+    # Force-include android_compat.h to define l_fseek/l_ftell before Lua sources
+    target_compile_options(breadlua_native PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/src/android_compat.h)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
