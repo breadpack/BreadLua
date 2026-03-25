@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using BreadPack.NativeLua.Native;
@@ -8,7 +9,7 @@ namespace BreadPack.NativeLua;
 public class LuaTinker
 {
     private readonly LuaState _state;
-    private static readonly Dictionary<string, Delegate> _bindings = new();
+    private static readonly ConcurrentDictionary<string, Delegate> _bindings = new();
     private static bool _callbackRegistered;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
