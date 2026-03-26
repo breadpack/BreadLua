@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace UnityBuilderAction
@@ -13,7 +14,6 @@ namespace UnityBuilderAction
             var buildTarget = EditorUserBuildSettings.activeBuildTarget;
             var buildPath = "build/" + buildTarget.ToString();
 
-            // Parse custom build path from args
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-buildPath" && i + 1 < args.Length)
@@ -22,6 +22,9 @@ namespace UnityBuilderAction
                     buildPath = args[i + 1];
             }
 
+            if (buildTarget == BuildTarget.Android && !buildPath.EndsWith(".apk"))
+                buildPath += ".apk";
+
             var scenes = EditorBuildSettings.scenes
                 .Where(s => s.enabled)
                 .Select(s => s.path)
@@ -29,8 +32,14 @@ namespace UnityBuilderAction
 
             if (scenes.Length == 0)
             {
-                // Use default scene if none configured
-                scenes = new[] { "" };
+                Debug.Log("[BUILD] No scenes in build settings, creating empty scene");
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                    UnityEditor.SceneManagement.NewSceneSetup.DefaultGameObjects,
+                    UnityEditor.SceneManagement.NewSceneMode.Single);
+                var scenePath = "Assets/Scenes/BuildScene.unity";
+                System.IO.Directory.CreateDirectory("Assets/Scenes");
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+                scenes = new[] { scenePath };
             }
 
             var options = new BuildPlayerOptions
@@ -41,13 +50,22 @@ namespace UnityBuilderAction
                 options = BuildOptions.None
             };
 
-            Debug.Log($"[BUILD] Building {buildTarget} to {buildPath}");
+            Debug.Log($"[BUILD] Building {buildTarget} to {buildPath} with {scenes.Length} scene(s)");
 
             var result = BuildPipeline.BuildPlayer(options);
 
-            if (result.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            if (result.summary.result != BuildResult.Succeeded)
             {
                 Debug.LogError($"[BUILD] Build failed: {result.summary.result}");
+                Debug.LogError($"[BUILD] Total errors: {result.summary.totalErrors}");
+                foreach (var step in result.steps)
+                {
+                    foreach (var msg in step.messages)
+                    {
+                        if (msg.type == LogType.Error || msg.type == LogType.Exception)
+                            Debug.LogError($"[BUILD] {step.name}: {msg.content}");
+                    }
+                }
                 EditorApplication.Exit(1);
             }
             else
