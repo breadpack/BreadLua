@@ -3,6 +3,7 @@
 **Native Lua 5.4 for .NET — zero marshalling overhead via shared memory + Source Generator.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/breadpack/BreadLua/actions/workflows/ci.yml/badge.svg)](https://github.com/breadpack/BreadLua/actions/workflows/ci.yml)
 
 ## Why BreadLua?
 
@@ -11,7 +12,7 @@ Existing .NET Lua libraries have fundamental performance issues:
 | Library | Problem |
 |---------|---------|
 | NLua | Native Lua VM, but 4 P/Invoke calls per field access. C# interop kills performance. |
-| MoonSharp | Lua VM reimplemented in C# — interpreter is always slower than JIT. |
+| MoonSharp | Lua VM reimplemented in C# — interpreter is always slower than native. |
 | Lua-CSharp | Improved C# interpreter, still slower than native Lua. |
 
 **BreadLua's approach:**
@@ -34,7 +35,44 @@ BenchmarkDotNet v0.15.8, Windows 11, Intel Core i5-14600KF, .NET 9.0
 
 **Buffer\<T\> matches pure C# speed. 20x faster than traditional P/Invoke.**
 
-Zero managed allocations across all operations.
+## Installation
+
+### NuGet (.NET)
+
+```bash
+dotnet add package BreadPack.NativeLua
+dotnet add package BreadPack.NativeLua.Generator
+```
+
+Native library is included automatically for Windows/Linux/macOS.
+
+### Unity (UPM)
+
+**Option 1 — Git URL (recommended):**
+
+Window > Package Manager > + > Add package from git URL:
+```
+https://github.com/breadpack/BreadLua.git?path=src/BreadLua.Unity
+```
+
+**Option 2 — Local path:**
+
+Edit `Packages/manifest.json`:
+```json
+{
+  "dependencies": {
+    "dev.breadpack.nativelua": "file:path/to/BreadLua/src/BreadLua.Unity"
+  }
+}
+```
+
+**Option 3 — Download release:**
+
+1. Download `breadlua-unity-plugins` artifact from [Releases](https://github.com/breadpack/BreadLua/releases)
+2. Copy `Plugins/` folder to your Unity project's `Assets/Plugins/`
+3. Copy `BreadLua.Runtime.dll` to `Assets/Plugins/`
+
+> **Note:** Unity requires native plugins (`.dll`, `.so`, `.dylib`, `.a`) in the `Plugins/` directory with platform-specific `.meta` files. See [docs/unity-setup.md](docs/unity-setup.md) for details.
 
 ## Quick Start
 
@@ -47,13 +85,17 @@ using var lua = new LuaState();
 lua.DoString("print('Hello from Lua!')");
 
 // Evaluate expressions
-int result = lua.Eval<int>("10 + 20");
+int result = lua.Eval<int>("10 + 20");  // 30
 
-// Call Lua functions with arguments
+// Call Lua functions
 lua.DoString("function add(a, b) return a + b end");
 int sum = lua.Call<int>("add", 3, 7);  // 10
 
-// Runtime binding (LuaTinker)
+// Set global variables
+lua.SetGlobal("playerName", "Hero");
+lua.SetGlobal("hp", 100L);
+
+// Runtime binding (C# functions callable from Lua)
 lua.Tinker.Bind("multiply", (int a, int b) => a * b);
 int product = lua.Eval<int>("multiply(6, 7)");  // 42
 
@@ -61,7 +103,7 @@ int product = lua.Eval<int>("multiply(6, 7)");  // 42
 using var buffer = new Buffer<UnitData>(100);
 buffer.Count = 1;
 buffer[0] = new UnitData { hp = 100, attack = 25 };
-buffer.BindToLua(lua, "g_unit");  // Lua accesses same memory
+buffer.BindToLua(lua, "g_unit");  // Lua accesses same memory pointer
 ```
 
 ## Source Generator
@@ -73,14 +115,14 @@ buffer.BindToLua(lua, "g_unit");  // Lua accesses same memory
 [StructLayout(LayoutKind.Sequential)]
 public struct UnitData
 {
-    public int unitId;         // Auto-exposed to Lua
+    public int unitId;
     public float hp;
     public float attack;
-    [LuaReadOnly] public bool isAlive;    // Getter only
-    [LuaIgnore] public int internalFlag;  // Hidden from Lua
-    [LuaField("def")] public float defence;  // Custom Lua name
+    [LuaReadOnly] public bool isAlive;
+    [LuaIgnore] public int internalFlag;
+    [LuaField("def")] public float defence;
 }
-// Source Generator creates: UnitDataBridge.g.cs + bread_unit.c + unit.lua
+// Generates: UnitDataBridge.g.cs + bread_unit.c + unit_wrapper.lua
 ```
 
 ### Function Binding — `[LuaModule]`
@@ -125,21 +167,77 @@ p:Heal(50)
 print(p.HP)      -- 150
 ```
 
+## Unity Integration
+
+```csharp
+using BreadPack.NativeLua;
+using BreadPack.NativeLua.Unity;
+using UnityEngine;
+
+public class LuaDemo : MonoBehaviour
+{
+    void Start()
+    {
+        // Option 1: Direct LuaState
+        using var lua = new LuaState();
+        lua.Tinker.Bind("log", (string msg) => Debug.Log(msg));
+        lua.DoString("log('Hello from Lua in Unity!')");
+
+        // Option 2: UnityLuaState component
+        // Attach UnityLuaState to a GameObject in the Inspector
+        // Set startup scripts (TextAsset) and it auto-manages lifecycle
+    }
+}
+```
+
+### UnityLuaState Component
+
+Attach `UnityLuaState` to a GameObject. It manages the Lua lifecycle automatically:
+
+- **Awake** — Creates LuaState, executes startup scripts
+- **Update** — Calls Lua `on_update()` if defined
+- **OnDestroy** — Disposes LuaState
+
+### Loading Lua Scripts from Resources
+
+```csharp
+var loader = new UnityModuleLoader("Lua");  // Resources/Lua/
+string script = loader.Load("my_module");   // Loads Resources/Lua/my_module.lua.txt
+lua.DoString(script);
+```
+
+> Unity requires Lua scripts to have `.lua.txt` extension to be recognized as TextAsset.
+
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| Native Lua 5.4 VM | Done |
-| LuaState (DoString, DoFile, Call, Eval) | Done |
-| Buffer\<T\> shared memory | Done |
-| Source Generator — [LuaBridge] | Done |
-| Source Generator — [LuaModule] | Done |
-| Source Generator — [LuaBind] | Done |
-| LuaTinker — runtime Bind() | Done |
-| Hot Reload | Done |
-| REPL | Done |
-| Unity package | Done |
-| Benchmarks | Done |
+| Feature | Description |
+|---------|-------------|
+| LuaState | DoString, DoFile, Call, Eval with type-safe returns |
+| Buffer\<T\> | Zero-copy shared memory between C# and Lua |
+| LuaTinker | Runtime C# function binding to Lua |
+| [LuaBridge] | Source Generator for struct data binding |
+| [LuaModule] | Source Generator for static function binding |
+| [LuaBind] | Source Generator for class binding with metatable |
+| Hot Reload | Watch and reload Lua scripts on file change |
+| REPL | Interactive Lua console |
+| Unity | UPM package with MonoBehaviour lifecycle integration |
+
+## Supported Platforms
+
+| Platform | Architecture | Library |
+|----------|-------------|---------|
+| Windows | x64 | `breadlua_native.dll` |
+| Linux | x64 | `libbreadlua_native.so` |
+| macOS | x64, arm64 (Universal) | `libbreadlua_native.dylib` |
+| Android | arm64-v8a, armeabi-v7a | `libbreadlua_native.so` |
+| iOS | arm64 (static) | `libbreadlua_native.a` |
+
+## Documentation
+
+- [API Reference](docs/api-reference.md)
+- [Unity Setup Guide](docs/unity-setup.md)
+- [Source Generator Guide](docs/source-generator.md)
+- [Building from Source](docs/building.md)
 
 ## Architecture
 
@@ -155,15 +253,6 @@ C# Bridge (.g.cs) + C Module (.c) + Lua Wrapper (.lua)
 C# App <--shared memory--> C Module <--native--> lua54 VM
          (pointer)          (bridge)
 ```
-
-## Unity
-
-Install via UPM (Package Manager):
-```json
-{ "dev.breadpack.nativelua": "file:path/to/BreadLua.Unity" }
-```
-
-Place native plugins in `Plugins/{Windows,Android,iOS,macOS}/`.
 
 ## License
 
