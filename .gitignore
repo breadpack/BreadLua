@@ -10,6 +10,11 @@
 *.gserviceaccount.json
 breadlua-*.json
 
+# Apple code signing
+*.p12
+*.mobileprovision
+*.provisionprofile
+
 # User-specific files
 *.rsuser
 *.suo
