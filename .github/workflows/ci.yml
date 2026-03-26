@@ -319,6 +319,7 @@ jobs:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: tests/BreadLua.Unity.TestProject
           unityVersion: 6000.3.8f1
+          allowDirtyBuild: true
 
       - name: Archive and export iOS
         if: matrix.targetPlatform == 'iOS'
