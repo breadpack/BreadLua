@@ -10,6 +10,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class LuaStateTests
     {
         [Test]
+        [Timeout(10000)]
         public void CreateAndDispose()
         {
             var lua = new LuaState();
@@ -18,6 +19,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void DoString_SimpleExpression()
         {
             using var lua = new LuaState();
@@ -27,6 +29,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void DoString_SyntaxError_Throws()
         {
             using var lua = new LuaState();
@@ -34,6 +37,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Call_GlobalFunction()
         {
             using var lua = new LuaState();
@@ -44,6 +48,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Eval_Int()
         {
             using var lua = new LuaState();
@@ -51,6 +56,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Eval_Double()
         {
             using var lua = new LuaState();
@@ -58,6 +64,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Eval_Bool()
         {
             using var lua = new LuaState();
@@ -66,6 +73,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Eval_String()
         {
             using var lua = new LuaState();
@@ -73,6 +81,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void SetGlobal_AllTypes()
         {
             using var lua = new LuaState();
@@ -91,6 +100,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void CallWithArgs_MixedTypes()
         {
             using var lua = new LuaState();
@@ -100,6 +110,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void DisposedState_Throws()
         {
             var lua = new LuaState();

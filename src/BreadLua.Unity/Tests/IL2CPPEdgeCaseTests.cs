@@ -8,6 +8,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class IL2CPPEdgeCaseTests
     {
         [Test]
+        [Timeout(10000)]
         public void ReversePInvokeCallback_SurvivesIL2CPP()
         {
             using var lua = new LuaState();
@@ -17,6 +18,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void GenericReadValue_AllTypes()
         {
             using var lua = new LuaState();
@@ -30,6 +32,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void GenericCallWithParams_BoxingRoundTrip()
         {
             using var lua = new LuaState();
@@ -44,6 +47,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void BufferGenericPointer_MultipleTypes()
         {
             using var intBuf = new Buffer<int>(4);
@@ -66,6 +70,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void GCHandleRoundTrip_ObjectSurvivesNativePass()
         {
             var testObj = new TestPayload { Value = 42, Name = "test" };
@@ -88,6 +93,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void DelegateTypePatternMatching_AllBindOverloads()
         {
             using var lua = new LuaState();
@@ -116,6 +122,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void SourceGeneratedCode_NotStripped()
         {
             using var lua = new LuaState();
@@ -135,6 +142,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void UnicodeStringMarshalling_KoreanAndEmoji()
         {
             using var lua = new LuaState();

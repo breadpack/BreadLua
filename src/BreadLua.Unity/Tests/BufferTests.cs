@@ -8,6 +8,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class BufferTests
     {
         [Test]
+        [Timeout(10000)]
         public void Create_And_Access()
         {
             using var buffer = new Buffer<int>(10);
@@ -22,6 +23,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void BindToLua_And_ReadFromLua()
         {
             using var lua = new LuaState();
@@ -37,6 +39,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void AsSpan_ReturnsCorrectSlice()
         {
             using var buffer = new Buffer<int>(10);
@@ -52,6 +55,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Dispose_FreesMemory()
         {
             var buffer = new Buffer<int>(10);
@@ -62,6 +66,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void OutOfRange_Throws()
         {
             using var buffer = new Buffer<int>(5);

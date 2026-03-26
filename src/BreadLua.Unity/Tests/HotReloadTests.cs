@@ -9,6 +9,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class HotReloadTests
     {
         [Test]
+        [Timeout(10000)]
         public void Reload_UpdatesGlobalState()
         {
             using var lua = new LuaState();

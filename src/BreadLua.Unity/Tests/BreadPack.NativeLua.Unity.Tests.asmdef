@@ -2,7 +2,9 @@
     "name": "BreadPack.NativeLua.Unity.Tests",
     "rootNamespace": "BreadPack.NativeLua.Unity.Tests",
     "references": [
-        "BreadPack.NativeLua.Unity"
+        "BreadPack.NativeLua.Unity",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,9 +17,6 @@
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
-    ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
     ],
     "noEngineReferences": false
 }

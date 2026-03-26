@@ -95,7 +95,12 @@ BREADLUA_EXPORT void breadlua_set_generic_callback(void* fn) {
 static int bread_generic_dispatch(lua_State* L) {
     if (!g_generic_callback) return 0;
     const char* name = lua_tostring(L, lua_upvalueindex(1));
-    return g_generic_callback(L, name);
+    int result = g_generic_callback(L, name);
+    if (result < 0) {
+        /* C# callback signaled an error: error message is on top of stack */
+        return lua_error(L);
+    }
+    return result;
 }
 
 BREADLUA_EXPORT void breadlua_register_callback(lua_State* L, const char* name) {

@@ -8,6 +8,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class TinkerTests
     {
         [Test]
+        [Timeout(10000)]
         public void Bind_IntFunc_And_Call()
         {
             using var lua = new LuaState();
@@ -17,6 +18,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Bind_FloatFunc()
         {
             using var lua = new LuaState();
@@ -26,6 +28,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Bind_StringFunc()
         {
             using var lua = new LuaState();
@@ -35,6 +38,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Bind_StringAction()
         {
             using var lua = new LuaState();
@@ -45,6 +49,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Bind_Action()
         {
             using var lua = new LuaState();
@@ -55,6 +60,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Bind_DoubleFunc()
         {
             using var lua = new LuaState();
@@ -64,6 +70,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void Callback_Exception_Propagates()
         {
             using var lua = new LuaState();
@@ -72,6 +79,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void MultiInstance_BindingIsolation()
         {
             using var lua1 = new LuaState();

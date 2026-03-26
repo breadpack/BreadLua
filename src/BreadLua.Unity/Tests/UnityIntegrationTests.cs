@@ -10,6 +10,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class UnityIntegrationTests
     {
         [UnityTest]
+        [Timeout(10000)]
         public IEnumerator UnityLuaState_Lifecycle()
         {
             var go = new GameObject("LuaTest");
@@ -25,6 +26,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [UnityTest]
+        [Timeout(10000)]
         public IEnumerator UnityLuaState_UpdateCallback()
         {
             var go = new GameObject("LuaTest");
@@ -45,6 +47,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [UnityTest]
+        [Timeout(10000)]
         public IEnumerator UnityLuaState_StartupScripts()
         {
             var go = new GameObject("LuaTest");
@@ -60,6 +63,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void UnityModuleLoader_LoadFromResources()
         {
             var loader = new UnityModuleLoader("Lua");

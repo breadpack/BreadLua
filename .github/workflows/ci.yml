@@ -203,36 +203,25 @@ jobs:
           path: unity-package/
 
   # ================================
-  # Unity Play Mode Tests (GameCI)
+  # Unity Editor Tests (executeMethod)
   # ================================
   unity-test:
-    needs: [build-native-windows, build-native-linux, build-native-macos, test-dotnet]
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact: native-linux-x64
-            pluginDir: Plugins/Linux
-            lib: libbreadlua_native.so
-          - os: windows-latest
-            artifact: native-windows-x64
-            pluginDir: Plugins/Windows
-            lib: breadlua_native.dll
-    runs-on: ${{ matrix.os }}
+    needs: [build-native-linux, test-dotnet]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Download native artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: native-linux-x64
           path: native-lib
 
       - name: Copy native lib to Unity package plugins
         shell: bash
         run: |
-          mkdir -p src/BreadLua.Unity/${{ matrix.pluginDir }}
-          cp native-lib/${{ matrix.lib }} src/BreadLua.Unity/${{ matrix.pluginDir }}/
+          mkdir -p src/BreadLua.Unity/Plugins/Linux
+          cp native-lib/libbreadlua_native.so src/BreadLua.Unity/Plugins/Linux/
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -249,28 +238,30 @@ jobs:
           mkdir -p tests/BreadLua.Unity.TestProject/Assets/Plugins
           cp src/BreadLua.Runtime/bin/Release/netstandard2.1/BreadLua.Runtime.dll tests/BreadLua.Unity.TestProject/Assets/Plugins/
 
-      - uses: game-ci/unity-test-runner@v4
+      - name: Run Unity Tests via executeMethod
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: playmode
           projectPath: tests/BreadLua.Unity.TestProject
           unityVersion: 6000.3.8f1
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          targetPlatform: StandaloneLinux64
+          buildMethod: TestRunnerCLI.RunTests
+          allowDirtyBuild: true
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: unity-test-results-${{ matrix.os }}
-          path: artifacts/
+          name: unity-test-results
+          path: tests/BreadLua.Unity.TestProject/unity-cli.log
 
   # ================================
   # Unity Build for Mobile (IL2CPP)
   # ================================
   unity-build:
-    needs: [unity-test, build-native-android, build-native-ios]
+    needs: [unity-test, build-native-android, build-native-ios, build-native-linux, build-native-macos]
     strategy:
       matrix:
         include:

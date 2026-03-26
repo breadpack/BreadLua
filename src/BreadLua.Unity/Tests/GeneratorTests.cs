@@ -8,6 +8,7 @@ namespace BreadPack.NativeLua.Unity.Tests
     public class GeneratorTests
     {
         [Test]
+        [Timeout(10000)]
         public void LuaBind_ClassRegistration()
         {
             using var lua = new LuaState();
@@ -16,6 +17,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void LuaBind_MethodCall()
         {
             using var lua = new LuaState();
@@ -27,6 +29,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void LuaBind_PropertyAccess()
         {
             using var lua = new LuaState();
@@ -49,6 +52,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void LuaModule_FunctionCall()
         {
             using var lua = new LuaState();
@@ -58,6 +62,7 @@ namespace BreadPack.NativeLua.Unity.Tests
         }
 
         [Test]
+        [Timeout(10000)]
         public void LuaBridge_StructBinding()
         {
             using var lua = new LuaState();

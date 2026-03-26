@@ -527,3 +527,13 @@ crashlytics-build.properties
 
 # TextMeshPro
 [Aa]ssets/TextMesh*Pro/
+
+# Unity test artifacts
+TestResults*.xml
+InitTestScene*.unity
+InitTestScene*.unity.meta
+
+# Native binaries (built locally, CI builds from source)
+*.dylib
+*.so
+!src/BreadLua.Unity/Plugins/**/*.meta

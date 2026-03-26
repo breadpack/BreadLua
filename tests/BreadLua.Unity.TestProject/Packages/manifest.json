@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.unity.test-framework": "1.6.0",
+    "dev.breadpack.nativelua": "file:../../../src/BreadLua.Unity"
+  },
+  "testables": [
+    "dev.breadpack.nativelua"
+  ]
+}
