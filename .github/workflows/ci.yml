@@ -350,7 +350,7 @@ jobs:
         include:
           - platform: android
             artifact: unity-build-Android
-            device: model=Pixel6,version=33
+            device: model=oriole,version=33
           - platform: ios
             artifact: unity-build-iOS
             device: model=iphone13pro,version=16.6
