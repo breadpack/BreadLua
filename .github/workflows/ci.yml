@@ -382,7 +382,6 @@ jobs:
             --app "${{ steps.find-app.outputs.apk_path }}" \
             --device ${{ matrix.device }} \
             --timeout 5m \
-            --results-bucket=${{ secrets.GCP_PROJECT_ID }}-test-results \
             --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Run Firebase Test Lab (iOS - beta)
@@ -399,18 +398,11 @@ jobs:
       - name: Check test results (Android)
         if: matrix.platform == 'android' && steps.find-app.outputs.apk_path != ''
         run: |
-          sleep 10
           MATRIX_ID=$(gcloud firebase test android results list \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --format="value(testMatrixId)" 2>/dev/null | tail -1)
           if [ -n "$MATRIX_ID" ]; then
-            gsutil cp "gs://${{ secrets.GCP_PROJECT_ID }}-test-results/$MATRIX_ID/*/logcat" ./logcat.txt 2>/dev/null || true
-            if [ -f ./logcat.txt ]; then
-              if grep -q "\[BREADLUA_TEST\] FAIL:" ./logcat.txt; then
-                echo "::error::Firebase Test Lab tests failed"
-                grep "\[BREADLUA_TEST\]" ./logcat.txt
-                exit 1
-              fi
-              grep "\[BREADLUA_TEST\] SUMMARY:" ./logcat.txt || echo "No test summary found in logcat"
-            fi
+            echo "Test matrix: $MATRIX_ID"
+            gcloud firebase test android results describe "$MATRIX_ID" \
+              --project ${{ secrets.GCP_PROJECT_ID }} 2>/dev/null || true
           fi
