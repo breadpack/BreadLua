@@ -382,6 +382,7 @@ jobs:
             --app "${{ steps.find-app.outputs.apk_path }}" \
             --device ${{ matrix.device }} \
             --timeout 5m \
+            --results-bucket=gs://breadlua-test-results \
             --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Run Firebase Test Lab (iOS - beta)
