@@ -263,6 +263,7 @@ jobs:
   unity-build:
     needs: [unity-test, build-native-android, build-native-ios, build-native-linux, build-native-macos]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - targetPlatform: Android
